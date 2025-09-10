@@ -7,8 +7,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.arhoverse.presentation.user.UserDetailScreen
 import com.example.arhoverse.presentation.user.UserDetailViewModel
+import com.example.arhoverse.presentation.user.UserListScreen
+import com.example.arhoverse.presentation.user.UserListViewModel
+import androidx.compose.runtime.remember
 
 sealed class Screen(val route: String) {
+    object UserList : Screen("userList")
     object UserDetail : Screen("userDetail/{userId}") {
         fun createRoute(userId: Int) = "userDetail/$userId"
     }
@@ -16,14 +20,28 @@ sealed class Screen(val route: String) {
 
 @Composable
 fun AppNavGraph(
-    viewModelFactory: (Int) -> UserDetailViewModel
+    userListViewModelFactory: () -> UserListViewModel,
+    userDetailViewModelFactory: (Int) -> UserDetailViewModel
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.UserDetail.createRoute(1)) {
+    NavHost(navController = navController, startDestination = Screen.UserList.route) {
+        composable(Screen.UserList.route) {
+            val viewModel = remember { userListViewModelFactory() }
+            UserListScreen(
+                viewModel = viewModel,
+                onUserClick = { userId ->
+                    navController.navigate(Screen.UserDetail.createRoute(userId))
+                }
+            )
+        }
         composable("userDetail/{userId}") { backStackEntry ->
-            val userId = 1 // Test toujours sur l'utilisateur 1
-            val viewModel = viewModelFactory(userId)
-            UserDetailScreen(userId = userId, viewModel = viewModel)
+            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
+            val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
+            UserDetailScreen(
+                userId = userId,
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
 }
