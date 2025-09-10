@@ -17,8 +17,12 @@ class FeedViewModel (
     private val _errorMessage = MutableStateFlow("")
     val errorMessage: StateFlow<String> = _errorMessage
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     fun loadFeed(page: Int = 1, limit: Int = 10) {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 val posts = feedRepository.getFeed(page, limit)
                 _feedPosts.value = posts
@@ -26,6 +30,8 @@ class FeedViewModel (
             } catch (e: Exception) {
                 _feedPosts.value = emptyList()
                 _errorMessage.value = "Impossible de charger le feed. Vérifiez votre connexion."
+            } finally {
+                _isLoading.value = false
             }
         }
     }

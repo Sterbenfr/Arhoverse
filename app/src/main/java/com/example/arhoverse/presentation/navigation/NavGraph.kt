@@ -13,6 +13,8 @@ import com.example.arhoverse.presentation.post.PostDetailViewModel
 import androidx.compose.runtime.remember
 import com.example.arhoverse.presentation.feed.feed.FeedScreen
 import com.example.arhoverse.presentation.feed.FeedViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 
 sealed class Screen(val route: String) {
     object UserList : Screen("userList")
@@ -30,13 +32,18 @@ fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
     userDetailViewModelFactory: (Int) -> UserDetailViewModel,
     postDetailViewModelFactory: (Int) -> PostDetailViewModel,
-    feedViewModelFactory: () -> FeedViewModel
+    feedViewModelFactory: () -> ViewModelProvider.Factory
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Screen.Feed.route) {
         composable(Screen.Feed.route) {
-            val viewModel = remember { feedViewModelFactory() }
-            FeedScreen(viewModel = viewModel)
+            val viewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())
+            FeedScreen(
+                viewModel = viewModel,
+                onPostClick = { postId ->
+                    navController.navigate(Screen.PostDetail.createRoute(postId.toInt()))
+                }
+            )
         }
         composable(Screen.UserList.route) {
             val viewModel = remember { userListViewModelFactory() }

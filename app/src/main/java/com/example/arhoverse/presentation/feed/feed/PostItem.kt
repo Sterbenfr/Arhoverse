@@ -1,7 +1,9 @@
 package com.example.arhoverse.presentation.feed.feed
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,36 +16,41 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun PostItem(post: PostWithUser) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .padding(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+fun PostItem(post: PostWithUser, onPostClick: (String) -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { onPostClick(post.post.id.toString()) }
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = rememberAsyncImagePainter(post.user.avatarUrl),
+                    contentDescription = "Avatar",
+                    modifier = Modifier.size(40.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = post.user.username ?: "",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Image(
-                painter = rememberAsyncImagePainter(post.user.avatarUrl),
-                contentDescription = "Avatar",
-                modifier = Modifier.size(40.dp)
+                painter = rememberAsyncImagePainter(post.post.imageUrl),
+                contentDescription = "Post Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = post.user.username ?: "",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text = post.post.caption ?: "")
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = "${post.likesCount} likes")
+            Text(text = "${post.commentsCount} comments")
+            Text(text = formatDate(post.post.createdAt ?: ""))
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Image(
-            painter = rememberAsyncImagePainter(post.post.imageUrl),
-            contentDescription = "Post Image",
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(text = post.post.caption ?: "")
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(text = "${post.likesCount} likes")
-        Text(text = "${post.commentsCount} comments")
-        Text(text = formatDate(post.post.createdAt ?: ""))
     }
 }
 

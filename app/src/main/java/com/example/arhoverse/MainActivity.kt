@@ -22,6 +22,7 @@ import com.example.arhoverse.presentation.user.UserDetailViewModel
 import com.example.arhoverse.presentation.user.UserListViewModel
 import com.example.arhoverse.presentation.feed.theme.ArhoverseTheme
 import com.example.arhoverse.presentation.feed.FeedViewModel
+import com.example.arhoverse.presentation.feed.FeedViewModelFactory
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -64,7 +65,7 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     feedViewModelFactory = {
-                        FeedViewModel(feedRepository)
+                        FeedViewModelFactory(feedRepository)
                     }
                 )
             }
