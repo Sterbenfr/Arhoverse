@@ -54,12 +54,6 @@ fun UserListScreen(
                         elevation = CardDefaults.cardElevation(2.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(12.dp)) {
-                            AsyncImage(
-                                model = user.avatarUrl,
-                                contentDescription = "Avatar de l'utilisateur",
-                                modifier = Modifier.height(48.dp).width(48.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(text = user.fullName ?: "", fontWeight = FontWeight.Bold)
                                 Text(text = "@${user.username}", color = Color.Gray)
