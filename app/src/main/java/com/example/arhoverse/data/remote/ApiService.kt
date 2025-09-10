@@ -30,4 +30,8 @@ interface ApiService {
 
     @GET("bookmarks")
     suspend fun getUserBookmarks(@Query("userId") userId: Int): List<Bookmark>
+
+
+    @GET("feed")
+    suspend fun getFeed(): List<Post>
 }

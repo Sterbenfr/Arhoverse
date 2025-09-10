@@ -1,7 +1,6 @@
 package com.example.arhoverse.presentation.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -12,6 +11,8 @@ import com.example.arhoverse.presentation.user.UserListViewModel
 import com.example.arhoverse.presentation.post.PostDetailScreen
 import com.example.arhoverse.presentation.post.PostDetailViewModel
 import androidx.compose.runtime.remember
+import com.example.arhoverse.presentation.feed.feed.FeedScreen
+import com.example.arhoverse.presentation.feed.FeedViewModel
 
 sealed class Screen(val route: String) {
     object UserList : Screen("userList")
@@ -21,16 +22,22 @@ sealed class Screen(val route: String) {
     object PostDetail : Screen("postDetail/{postId}") {
         fun createRoute(postId: Int) = "postDetail/$postId"
     }
+    object Feed : Screen("feed")
 }
 
 @Composable
 fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
     userDetailViewModelFactory: (Int) -> UserDetailViewModel,
-    postDetailViewModelFactory: (Int) -> PostDetailViewModel
+    postDetailViewModelFactory: (Int) -> PostDetailViewModel,
+    feedViewModelFactory: () -> FeedViewModel
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.UserList.route) {
+    NavHost(navController = navController, startDestination = Screen.Feed.route) {
+        composable(Screen.Feed.route) {
+            val viewModel = remember { feedViewModelFactory() }
+            FeedScreen(viewModel = viewModel)
+        }
         composable(Screen.UserList.route) {
             val viewModel = remember { userListViewModelFactory() }
             UserListScreen(

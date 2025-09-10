@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.arhoverse.data.remote.ApiService
 import com.example.arhoverse.data.repository.BookmarkRepository
+import com.example.arhoverse.data.repository.FeedRepository
 import com.example.arhoverse.data.repository.PostRepository
 import com.example.arhoverse.data.repository.UserRepository
 import com.example.arhoverse.domain.usecase.GetPostCommentsUseCase
@@ -19,7 +20,8 @@ import com.example.arhoverse.presentation.navigation.AppNavGraph
 import com.example.arhoverse.presentation.post.PostDetailViewModel
 import com.example.arhoverse.presentation.user.UserDetailViewModel
 import com.example.arhoverse.presentation.user.UserListViewModel
-import com.example.arhoverse.ui.theme.ArhoverseTheme
+import com.example.arhoverse.presentation.feed.theme.ArhoverseTheme
+import com.example.arhoverse.presentation.feed.FeedViewModel
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -42,6 +44,7 @@ class MainActivity : ComponentActivity() {
         val getPostCommentsUseCase = GetPostCommentsUseCase(postRepository)
         val getPostLikesUseCase = GetPostLikesUseCase(postRepository)
         val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)
+        val feedRepository = FeedRepository(apiService)
         setContent {
             ArhoverseTheme {
                 AppNavGraph(
@@ -59,6 +62,9 @@ class MainActivity : ComponentActivity() {
                             getPostLikesUseCase,
                             getUserBookmarksUseCase
                         )
+                    },
+                    feedViewModelFactory = {
+                        FeedViewModel(feedRepository)
                     }
                 )
             }
