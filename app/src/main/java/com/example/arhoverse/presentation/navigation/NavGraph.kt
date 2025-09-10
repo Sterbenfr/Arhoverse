@@ -9,6 +9,8 @@ import com.example.arhoverse.presentation.user.UserDetailScreen
 import com.example.arhoverse.presentation.user.UserDetailViewModel
 import com.example.arhoverse.presentation.user.UserListScreen
 import com.example.arhoverse.presentation.user.UserListViewModel
+import com.example.arhoverse.presentation.post.PostDetailScreen
+import com.example.arhoverse.presentation.post.PostDetailViewModel
 import androidx.compose.runtime.remember
 
 sealed class Screen(val route: String) {
@@ -16,12 +18,16 @@ sealed class Screen(val route: String) {
     object UserDetail : Screen("userDetail/{userId}") {
         fun createRoute(userId: Int) = "userDetail/$userId"
     }
+    object PostDetail : Screen("postDetail/{postId}") {
+        fun createRoute(postId: Int) = "postDetail/$postId"
+    }
 }
 
 @Composable
 fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
-    userDetailViewModelFactory: (Int) -> UserDetailViewModel
+    userDetailViewModelFactory: (Int) -> UserDetailViewModel,
+    postDetailViewModelFactory: (Int) -> PostDetailViewModel
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Screen.UserList.route) {
@@ -39,6 +45,16 @@ fun AppNavGraph(
             val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
             UserDetailScreen(
                 userId = userId,
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onPostClick = { postId -> navController.navigate(Screen.PostDetail.createRoute(postId)) }
+            )
+        }
+        composable("postDetail/{postId}") { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull() ?: return@composable
+            val viewModel = remember(postId) { postDetailViewModelFactory(postId) }
+            PostDetailScreen(
+                postId = postId,
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() }
             )
