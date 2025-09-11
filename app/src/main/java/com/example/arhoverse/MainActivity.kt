@@ -30,22 +30,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         val retrofit = Retrofit.Builder()
             .baseUrl("https://mini-social-api-ilyl.onrender.com")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val apiService = retrofit.create(ApiService::class.java)
+
         val userRepository = UserRepository(apiService)
-        val getUserUseCase = GetUserUseCase(userRepository)
-        val postRepository = PostRepository(apiService)
-        val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
         val getUsersUseCase = GetUsersUseCase(userRepository)
-        val bookmarkRepository = BookmarkRepository(apiService)
-        val getPostUseCase = GetPostUseCase(postRepository)
-        val getPostCommentsUseCase = GetPostCommentsUseCase(postRepository)
-        val getPostLikesUseCase = GetPostLikesUseCase(postRepository)
-        val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)
-        val feedRepository = FeedRepository(apiService)
+        val getUserUseCase = GetUserUseCase(userRepository)
+        val getUserPostsUseCase = GetUserPostsUseCase(PostRepository(apiService))
+
         setContent {
             ArhoverseTheme {
                 AppNavGraph(
@@ -54,18 +50,6 @@ class MainActivity : ComponentActivity() {
                     },
                     userDetailViewModelFactory = { userId ->
                         UserDetailViewModel(getUserUseCase, getUserPostsUseCase)
-                    },
-                    postDetailViewModelFactory = { postId ->
-                        PostDetailViewModel(
-                            getPostUseCase,
-                            getUserUseCase,
-                            getPostCommentsUseCase,
-                            getPostLikesUseCase,
-                            getUserBookmarksUseCase
-                        )
-                    },
-                    feedViewModelFactory = {
-                        FeedViewModelFactory(feedRepository)
                     }
                 )
             }
