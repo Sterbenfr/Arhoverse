@@ -40,7 +40,14 @@ class MainActivity : ComponentActivity() {
         val userRepository = UserRepository(apiService)
         val getUsersUseCase = GetUsersUseCase(userRepository)
         val getUserUseCase = GetUserUseCase(userRepository)
-        val getUserPostsUseCase = GetUserPostsUseCase(PostRepository(apiService))
+        val postRepository = PostRepository(apiService)
+        val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
+        val bookmarkRepository = BookmarkRepository(apiService)
+        val getPostUseCase = GetPostUseCase(postRepository)
+        val getPostCommentsUseCase = GetPostCommentsUseCase(postRepository)
+        val getPostLikesUseCase = GetPostLikesUseCase(postRepository)
+        val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)
+        val feedRepository = FeedRepository(apiService)
 
         setContent {
             ArhoverseTheme {
@@ -50,9 +57,22 @@ class MainActivity : ComponentActivity() {
                     },
                     userDetailViewModelFactory = { userId ->
                         UserDetailViewModel(getUserUseCase, getUserPostsUseCase)
+                    },
+                    postDetailViewModelFactory = { postId ->
+                        PostDetailViewModel(
+                            getPostUseCase,
+                            getUserUseCase,
+                            getPostCommentsUseCase,
+                            getPostLikesUseCase,
+                            getUserBookmarksUseCase
+                        )
+                    },
+                    feedViewModelFactory = {
+                        FeedViewModelFactory(feedRepository)
                     }
                 )
             }
         }
     }
 }
+

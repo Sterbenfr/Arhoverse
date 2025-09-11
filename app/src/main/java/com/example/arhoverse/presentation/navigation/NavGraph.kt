@@ -10,6 +10,14 @@ import com.example.arhoverse.presentation.user.UserDetailScreen
 import com.example.arhoverse.presentation.user.UserDetailViewModel
 import com.example.arhoverse.presentation.user.UserListScreen
 import com.example.arhoverse.presentation.user.UserListViewModel
+import com.example.arhoverse.presentation.user.*
+import com.example.arhoverse.presentation.post.PostDetailScreen
+import com.example.arhoverse.presentation.post.PostDetailViewModel
+import androidx.compose.runtime.remember
+import com.example.arhoverse.presentation.feed.feed.FeedScreen
+import com.example.arhoverse.presentation.feed.FeedViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.ViewModelProvider
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -17,11 +25,17 @@ sealed class Screen(val route: String) {
     object UserDetail : Screen("userDetail/{userId}") {
         fun createRoute(userId: Int) = "userDetail/$userId"
     }
+    object PostDetail : Screen("postDetail/{postId}") {
+        fun createRoute(postId: Int) = "postDetail/$postId"
+    }
+    object Feed : Screen("feed")
 }
 
 @Composable
 fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
+    postDetailViewModelFactory: (Int) -> PostDetailViewModel,
+    feedViewModelFactory: () -> ViewModelProvider.Factory,
     userDetailViewModelFactory: (Int) -> UserDetailViewModel
 ) {
     val navController = rememberNavController()
