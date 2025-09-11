@@ -1,34 +1,47 @@
 package com.example.arhoverse.presentation.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.arhoverse.presentation.user.*
-import com.example.arhoverse.domain.usecase.GetUserUseCase
-import com.example.arhoverse.data.repository.UserRepository
+import androidx.navigation.compose.rememberNavController
+import com.example.arhoverse.presentation.user.UserDetailScreen
+import com.example.arhoverse.presentation.user.UserDetailViewModel
+import com.example.arhoverse.presentation.user.UserListScreen
+import com.example.arhoverse.presentation.user.UserListViewModel
+import androidx.compose.runtime.remember
 
+sealed class Screen(val route: String) {
+    object UserList : Screen("userList")
+    object UserDetail : Screen("userDetail/{userId}") {
+        fun createRoute(userId: Int) = "userDetail/$userId"
+    }
+}
 
 @Composable
-fun NavGraph(navController: NavHostController, getUserUseCase: GetUserUseCase) {
-    NavHost(navController = navController, startDestination = "login") {
-        composable("login") {
-            LoginScreen(
-                authViewModel = viewModel(),
-                onLoginSuccess = { navController.navigate("home") }
+fun AppNavGraph(
+    userListViewModelFactory: () -> UserListViewModel,
+    userDetailViewModelFactory: (Int) -> UserDetailViewModel
+) {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = Screen.UserList.route) {
+        composable(Screen.UserList.route) {
+            val viewModel = remember { userListViewModelFactory() }
+            UserListScreen(
+                viewModel = viewModel,
+                onUserClick = { userId ->
+                    navController.navigate(Screen.UserDetail.createRoute(userId))
+                }
             )
-        }
-
-        composable("home") {
-            HomeScreen(navController = navController)
         }
         composable("userDetail/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")?.toInt() ?: 0
-            val userDetailViewModel: UserDetailViewModel = viewModel(
-                factory = UserDetailViewModelFactory(getUserUseCase)
+            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
+            val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
+            UserDetailScreen(
+                userId = userId,
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
-            UserDetailScreen(userId = userId, viewModel = userDetailViewModel)
         }
     }
 }
