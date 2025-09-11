@@ -36,14 +36,20 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
+    userDetailViewModelFactory: (Int) -> UserDetailViewModel,
     postDetailViewModelFactory: (Int) -> PostDetailViewModel,
     feedViewModelFactory: () -> ViewModelProvider.Factory,
     storyViewModelFactory: () -> ViewModelProvider.Factory
 ) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.Feed.route) {
+    NavHost(navController = navController, startDestination = Screen.Login.route) {
 
+        composable(Screen.Login.route) {
+            LoginScreen(
+                onLoginSuccess = { navController.navigate(Screen.Feed.route) }
+            )
+        }
         composable(Screen.Feed.route) {
             val feedViewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())
             val storyViewModel: StoryViewModel = viewModel(factory = storyViewModelFactory())
