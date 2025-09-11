@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                     userListViewModelFactory = {
                         UserListViewModel(getUsersUseCase)
                     },
-                    userDetailViewModelFactory = { userId ->
+                    userDetailViewModelFactory = { userId: Int ->
                         UserDetailViewModel(
                             getUserUseCase,
                             getUserPostsUseCase,
@@ -106,4 +106,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
