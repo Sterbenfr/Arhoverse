@@ -37,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.clickable
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +45,8 @@ fun UserDetailScreen(
     userId: Int,
     viewModel: UserDetailViewModel,
     modifier: Modifier = Modifier,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onPostClick: ((Int) -> Unit)? = null
 ) {
     val user by viewModel.user.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -97,7 +99,8 @@ fun UserDetailScreen(
                                 Card(
                                     modifier = Modifier
                                         .padding(vertical = 8.dp, horizontal = 4.dp)
-                                        .fillMaxWidth(),
+                                        .fillMaxWidth()
+                                        .clickable { onPostClick?.invoke(post.id) },
                                     elevation = CardDefaults.cardElevation(4.dp)
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(12.dp)) {
@@ -106,23 +109,10 @@ fun UserDetailScreen(
                                             contentDescription = "Image du post",
                                             modifier = Modifier.height(180.dp)
                                         )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(text = post.caption ?: "", fontWeight = FontWeight.Medium)
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        if (!post.hashtags.isNullOrEmpty()) {
-                                            Row {
-                                                post.hashtags!!.forEach { tag ->
-                                                    AssistChip(
-                                                        onClick = {},
-                                                        label = { Text(text = "#$tag") },
-                                                        colors = AssistChipDefaults.assistChipColors(containerColor = Color(0xFFE0E0E0))
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                }
-                                            }
+                                        if (!post.caption.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(text = post.caption ?: "", fontWeight = FontWeight.Normal, color = Color.Gray, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified, maxLines = 1)
                                         }
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(text = "Date : ${post.createdAt ?: "-"}", color = Color.Gray, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified)
                                     }
                                 }
                             }
