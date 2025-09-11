@@ -1,13 +1,16 @@
 package com.example.arhoverse.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.arhoverse.presentation.user.LoginScreen
 import com.example.arhoverse.presentation.user.UserDetailScreen
 import com.example.arhoverse.presentation.user.UserDetailViewModel
 import com.example.arhoverse.presentation.user.UserListScreen
 import com.example.arhoverse.presentation.user.UserListViewModel
+import com.example.arhoverse.presentation.user.*
 import com.example.arhoverse.presentation.post.PostDetailScreen
 import com.example.arhoverse.presentation.post.PostDetailViewModel
 import androidx.compose.runtime.remember
@@ -19,6 +22,7 @@ import com.example.arhoverse.presentation.feed.StoryViewModel
 
 
 sealed class Screen(val route: String) {
+    object Login : Screen("login")
     object UserList : Screen("userList")
     object UserDetail : Screen("userDetail/{userId}") {
         fun createRoute(userId: Int) = "userDetail/$userId"
@@ -32,7 +36,6 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
-    userDetailViewModelFactory: (Int) -> UserDetailViewModel,
     postDetailViewModelFactory: (Int) -> PostDetailViewModel,
     feedViewModelFactory: () -> ViewModelProvider.Factory,
     storyViewModelFactory: () -> ViewModelProvider.Factory
@@ -64,7 +67,8 @@ fun AppNavGraph(
             )
         }
 
-        composable("userDetail/{userId}") { backStackEntry ->
+        composable(Screen.UserDetail.route) { backStackEntry ->
+
             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
             val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
             UserDetailScreen(

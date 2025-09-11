@@ -1,0 +1,95 @@
+Index: app/src/main/java/com/example/arhoverse/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse\n\nimport android.os.Bundle\nimport androidx.activity.ComponentActivity\nimport androidx.activity.compose.setContent\nimport androidx.activity.enableEdgeToEdge\nimport com.example.arhoverse.data.remote.ApiService\nimport com.example.arhoverse.data.repository.PostRepository\nimport com.example.arhoverse.data.repository.UserRepository\nimport com.example.arhoverse.domain.usecase.GetUserPostsUseCase\nimport com.example.arhoverse.domain.usecase.GetUserUseCase\nimport com.example.arhoverse.domain.usecase.GetUsersUseCase\nimport com.example.arhoverse.presentation.navigation.AppNavGraph\nimport com.example.arhoverse.presentation.user.UserDetailViewModel\nimport com.example.arhoverse.presentation.user.UserListViewModel\nimport com.example.arhoverse.ui.theme.ArhoverseTheme\nimport retrofit2.Retrofit\nimport retrofit2.converter.gson.GsonConverterFactory\n\nclass MainActivity : ComponentActivity() {\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        enableEdgeToEdge()\n        val retrofit = Retrofit.Builder()\n            .baseUrl(\"https://mini-social-api-ilyl.onrender.com\")\n            .addConverterFactory(GsonConverterFactory.create())\n            .build()\n        val apiService = retrofit.create(ApiService::class.java)\n        val userRepository = UserRepository(apiService)\n        val getUserUseCase = GetUserUseCase(userRepository)\n        val postRepository = PostRepository(apiService)\n        val getUserPostsUseCase = GetUserPostsUseCase(postRepository)\n        val getUsersUseCase = GetUsersUseCase(userRepository)\n        setContent {\n            ArhoverseTheme {\n                AppNavGraph(\n                    userListViewModelFactory = {\n                        UserListViewModel(getUsersUseCase)\n                    },\n                    userDetailViewModelFactory = { userId ->\n                        UserDetailViewModel(getUserUseCase, getUserPostsUseCase)\n                    }\n                )\n            }\n        }\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/MainActivity.kt b/app/src/main/java/com/example/arhoverse/MainActivity.kt
+--- a/app/src/main/java/com/example/arhoverse/MainActivity.kt	(revision 2dd1918173846204d27b35ae98b580acaf0f7ac5)
++++ b/app/src/main/java/com/example/arhoverse/MainActivity.kt	(date 1757580063023)
+@@ -21,16 +21,20 @@
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+         enableEdgeToEdge()
++
+         val retrofit = Retrofit.Builder()
+             .baseUrl("https://mini-social-api-ilyl.onrender.com")
+             .addConverterFactory(GsonConverterFactory.create())
+             .build()
+         val apiService = retrofit.create(ApiService::class.java)
++
+         val userRepository = UserRepository(apiService)
+-        val getUserUseCase = GetUserUseCase(userRepository)
+         val postRepository = PostRepository(apiService)
+-        val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
++
++        val getUserUseCase = GetUserUseCase(userRepository)
+         val getUsersUseCase = GetUsersUseCase(userRepository)
++        val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
++
+         setContent {
+             ArhoverseTheme {
+                 AppNavGraph(
+Index: app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse.presentation.navigation\n\nimport androidx.compose.runtime.Composable\nimport androidx.navigation.NavHostController\nimport androidx.navigation.compose.NavHost\nimport androidx.navigation.compose.composable\nimport androidx.navigation.compose.rememberNavController\nimport com.example.arhoverse.presentation.user.UserDetailScreen\nimport com.example.arhoverse.presentation.user.UserDetailViewModel\nimport com.example.arhoverse.presentation.user.UserListScreen\nimport com.example.arhoverse.presentation.user.UserListViewModel\nimport androidx.compose.runtime.remember\n\nsealed class Screen(val route: String) {\n    object UserList : Screen(\"userList\")\n    object UserDetail : Screen(\"userDetail/{userId}\") {\n        fun createRoute(userId: Int) = \"userDetail/$userId\"\n    }\n}\n\n@Composable\nfun AppNavGraph(\n    userListViewModelFactory: () -> UserListViewModel,\n    userDetailViewModelFactory: (Int) -> UserDetailViewModel\n) {\n    val navController = rememberNavController()\n    NavHost(navController = navController, startDestination = Screen.UserList.route) {\n        composable(Screen.UserList.route) {\n            val viewModel = remember { userListViewModelFactory() }\n            UserListScreen(\n                viewModel = viewModel,\n                onUserClick = { userId ->\n                    navController.navigate(Screen.UserDetail.createRoute(userId))\n                }\n            )\n        }\n        composable(\"userDetail/{userId}\") { backStackEntry ->\n            val userId = backStackEntry.arguments?.getString(\"userId\")?.toIntOrNull() ?: 1\n            val viewModel = remember(userId) { userDetailViewModelFactory(userId) }\n            UserDetailScreen(\n                userId = userId,\n                viewModel = viewModel,\n                onBack = { navController.popBackStack() }\n            )\n        }\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt b/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt
+--- a/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt	(revision 2dd1918173846204d27b35ae98b580acaf0f7ac5)
++++ b/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt	(date 1757579582057)
+@@ -5,13 +5,10 @@
+ import androidx.navigation.compose.NavHost
+ import androidx.navigation.compose.composable
+ import androidx.navigation.compose.rememberNavController
+-import com.example.arhoverse.presentation.user.UserDetailScreen
+-import com.example.arhoverse.presentation.user.UserDetailViewModel
+-import com.example.arhoverse.presentation.user.UserListScreen
+-import com.example.arhoverse.presentation.user.UserListViewModel
+-import androidx.compose.runtime.remember
++import com.example.arhoverse.presentation.user.*
+ 
+ sealed class Screen(val route: String) {
++    object Login : Screen("login")
+     object UserList : Screen("userList")
+     object UserDetail : Screen("userDetail/{userId}") {
+         fun createRoute(userId: Int) = "userDetail/$userId"
+@@ -24,9 +21,20 @@
+     userDetailViewModelFactory: (Int) -> UserDetailViewModel
+ ) {
+     val navController = rememberNavController()
+-    NavHost(navController = navController, startDestination = Screen.UserList.route) {
++
++    NavHost(navController = navController, startDestination = Screen.Login.route) {
++        composable(Screen.Login.route) {
++            LoginScreen(
++                onLoginSuccess = {
++                    navController.navigate(Screen.UserList.route) {
++                        popUpTo(Screen.Login.route) { inclusive = true } // empêche de revenir au login avec le bouton back
++                    }
++                }
++            )
++        }
++
+         composable(Screen.UserList.route) {
+-            val viewModel = remember { userListViewModelFactory() }
++            val viewModel = userListViewModelFactory()
+             UserListScreen(
+                 viewModel = viewModel,
+                 onUserClick = { userId ->
+@@ -34,9 +42,10 @@
+                 }
+             )
+         }
+-        composable("userDetail/{userId}") { backStackEntry ->
++
++        composable(Screen.UserDetail.route) { backStackEntry ->
+             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
+-            val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
++            val viewModel = userDetailViewModelFactory(userId)
+             UserDetailScreen(
+                 userId = userId,
+                 viewModel = viewModel,

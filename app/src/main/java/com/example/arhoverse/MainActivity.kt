@@ -5,10 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.arhoverse.data.remote.ApiService
-import com.example.arhoverse.data.repository.BookmarkRepository
-import com.example.arhoverse.data.repository.FeedRepository
 import com.example.arhoverse.data.repository.PostRepository
 import com.example.arhoverse.data.repository.UserRepository
+import com.example.arhoverse.data.repository.BookmarkRepository
+import com.example.arhoverse.data.repository.FeedRepository
+import com.example.arhoverse.presentation.post.PostDetailViewModel
 import com.example.arhoverse.domain.usecase.GetPostCommentsUseCase
 import com.example.arhoverse.domain.usecase.GetPostLikesUseCase
 import com.example.arhoverse.domain.usecase.GetPostUseCase
@@ -17,7 +18,6 @@ import com.example.arhoverse.domain.usecase.GetUserPostsUseCase
 import com.example.arhoverse.domain.usecase.GetUserUseCase
 import com.example.arhoverse.domain.usecase.GetUsersUseCase
 import com.example.arhoverse.presentation.navigation.AppNavGraph
-import com.example.arhoverse.presentation.post.PostDetailViewModel
 import com.example.arhoverse.presentation.user.UserDetailViewModel
 import com.example.arhoverse.presentation.user.UserListViewModel
 import com.example.arhoverse.presentation.feed.theme.ArhoverseTheme
@@ -34,13 +34,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+
         // Retrofit + ApiService
         val retrofit = Retrofit.Builder()
             .baseUrl("https://mini-social-api-ilyl.onrender.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val apiService = retrofit.create(ApiService::class.java)
+
         val userRepository = UserRepository(apiService)
+        val getUsersUseCase = GetUsersUseCase(userRepository)
         val getUserUseCase = GetUserUseCase(userRepository)
         val postRepository = PostRepository(apiService)
         val followRepository = com.example.arhoverse.data.repository.FollowRepository(apiService)
@@ -48,13 +51,13 @@ class MainActivity : ComponentActivity() {
         val followUserUseCase = com.example.arhoverse.domain.usecase.FollowUserUseCase(followRepository)
         val unfollowUserUseCase = com.example.arhoverse.domain.usecase.UnfollowUserUseCase(followRepository)
         val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
-        val getUsersUseCase = GetUsersUseCase(userRepository)
         val bookmarkRepository = BookmarkRepository(apiService)
         val getPostUseCase = GetPostUseCase(postRepository)
         val getPostCommentsUseCase = GetPostCommentsUseCase(postRepository)
         val getPostLikesUseCase = GetPostLikesUseCase(postRepository)
         val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)
         val feedRepository = FeedRepository(apiService)
+
         val likePostUseCase = com.example.arhoverse.domain.usecase.LikePostUseCase(feedRepository)
         val unlikePostUseCase = com.example.arhoverse.domain.usecase.UnlikePostUseCase(feedRepository)
         val addBookmarkUseCase = com.example.arhoverse.domain.usecase.AddBookmarkUseCase(feedRepository)
@@ -64,6 +67,7 @@ class MainActivity : ComponentActivity() {
         // Stories
         val storyRepository = StoryRepository(apiService)
         val getStoriesUseCase = GetStoriesUseCase(storyRepository)
+
 
         setContent {
             ArhoverseTheme {
@@ -102,3 +106,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+

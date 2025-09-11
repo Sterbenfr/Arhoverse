@@ -1,0 +1,270 @@
+Index: app/src/main/java/com/example/arhoverse/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse\n\nimport android.os.Bundle\nimport androidx.activity.ComponentActivity\nimport androidx.activity.compose.setContent\nimport androidx.activity.enableEdgeToEdge\nimport com.example.arhoverse.data.remote.ApiService\nimport com.example.arhoverse.data.repository.UserRepository\nimport com.example.arhoverse.domain.usecase.GetUserUseCase\nimport com.example.arhoverse.presentation.navigation.AppNavGraph\nimport com.example.arhoverse.presentation.user.UserDetailViewModel\nimport com.example.arhoverse.ui.theme.ArhoverseTheme\nimport retrofit2.Retrofit\nimport retrofit2.converter.gson.GsonConverterFactory\n\nclass MainActivity : ComponentActivity() {\n    override fun onCreate(savedInstanceState: Bundle?) {\n        super.onCreate(savedInstanceState)\n        enableEdgeToEdge()\n        val retrofit = Retrofit.Builder()\n            .baseUrl(\"https://mini-social-api-ilyl.onrender.com\")\n            .addConverterFactory(GsonConverterFactory.create())\n            .build()\n        val apiService = retrofit.create(ApiService::class.java)\n        val userRepository = UserRepository(apiService)\n        val getUserUseCase = GetUserUseCase(userRepository)\n        setContent {\n            ArhoverseTheme {\n                AppNavGraph(\n                    viewModelFactory = { userId ->\n                        UserDetailViewModel(getUserUseCase)\n                    }\n                )\n            }\n        }\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/MainActivity.kt b/app/src/main/java/com/example/arhoverse/MainActivity.kt
+--- a/app/src/main/java/com/example/arhoverse/MainActivity.kt	(revision 98ff26bce1316a6a1ff7ebb76acf696a1763fc2e)
++++ b/app/src/main/java/com/example/arhoverse/MainActivity.kt	(date 1757506735993)
+@@ -3,35 +3,28 @@
+ import android.os.Bundle
+ import androidx.activity.ComponentActivity
+ import androidx.activity.compose.setContent
+-import androidx.activity.enableEdgeToEdge
+-import com.example.arhoverse.data.remote.ApiService
+-import com.example.arhoverse.data.repository.UserRepository
+-import com.example.arhoverse.domain.usecase.GetUserUseCase
+-import com.example.arhoverse.presentation.navigation.AppNavGraph
+-import com.example.arhoverse.presentation.user.UserDetailViewModel
++import androidx.compose.material3.Surface
++import androidx.compose.runtime.Composable
++import androidx.compose.ui.Modifier
++import com.example.arhoverse.presentation.navigation.NavGraph
++import com.example.arhoverse.ui.theme.ArhoverseAppTheme
+ import com.example.arhoverse.ui.theme.ArhoverseTheme
+-import retrofit2.Retrofit
+-import retrofit2.converter.gson.GsonConverterFactory
+ 
+ class MainActivity : ComponentActivity() {
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+-        enableEdgeToEdge()
+-        val retrofit = Retrofit.Builder()
+-            .baseUrl("https://mini-social-api-ilyl.onrender.com")
+-            .addConverterFactory(GsonConverterFactory.create())
+-            .build()
+-        val apiService = retrofit.create(ApiService::class.java)
+-        val userRepository = UserRepository(apiService)
+-        val getUserUseCase = GetUserUseCase(userRepository)
+         setContent {
+-            ArhoverseTheme {
+-                AppNavGraph(
+-                    viewModelFactory = { userId ->
+-                        UserDetailViewModel(getUserUseCase)
+-                    }
+-                )
++            ArhoverseAppTheme {
++                Surface {
++                    App()
++                }
+             }
+         }
++
+     }
+ }
++
++@Composable
++fun App() {
++    NavGraph(modifier = Modifier)
++}
+Index: app/src/main/java/com/example/arhoverse/presentation/user/UserDetailScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse.presentation.user\n\nimport androidx.compose.runtime.Composable\nimport androidx.compose.runtime.LaunchedEffect\nimport androidx.compose.runtime.collectAsState\nimport androidx.compose.runtime.getValue\nimport androidx.compose.ui.Modifier\nimport androidx.compose.material3.Text\n\n@Composable\nfun UserDetailScreen(\n    userId: Int,\n    viewModel: UserDetailViewModel,\n    modifier: Modifier = Modifier\n) {\n    val user by viewModel.user.collectAsState()\n    val error by viewModel.error.collectAsState()\n\n    LaunchedEffect(userId) {\n        viewModel.loadUser(userId)\n    }\n\n    when {\n        user != null -> Text(\n            text = \"Nom complet : ${user!!.fullName}\\nPseudo : ${user!!.username}\\nBio : ${user!!.bio}\",\n            modifier = modifier\n        )\n        error != null -> Text(text = error!!, modifier = modifier)\n        else -> Text(text = \"Chargement...\", modifier = modifier)\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailScreen.kt b/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailScreen.kt
+--- a/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailScreen.kt	(revision 98ff26bce1316a6a1ff7ebb76acf696a1763fc2e)
++++ b/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailScreen.kt	(date 1757508158491)
+@@ -1,31 +1,30 @@
+ package com.example.arhoverse.presentation.user
+ 
+-import androidx.compose.runtime.Composable
+-import androidx.compose.runtime.LaunchedEffect
+-import androidx.compose.runtime.collectAsState
+-import androidx.compose.runtime.getValue
++import androidx.compose.foundation.layout.*
++import androidx.compose.material3.*
++import androidx.compose.runtime.*
+ import androidx.compose.ui.Modifier
+-import androidx.compose.material3.Text
++import androidx.compose.ui.unit.dp
++import androidx.lifecycle.viewmodel.compose.viewModel
++import com.example.arhoverse.domain.usecase.GetUserUseCase
+ 
+ @Composable
+-fun UserDetailScreen(
+-    userId: Int,
+-    viewModel: UserDetailViewModel,
+-    modifier: Modifier = Modifier
+-) {
++fun UserDetailScreen(userId: Int, getUserUseCase: GetUserUseCase) {
++    val viewModel: UserDetailViewModel = viewModel(factory = UserDetailViewModelFactory(getUserUseCase))
+     val user by viewModel.user.collectAsState()
+     val error by viewModel.error.collectAsState()
+ 
+-    LaunchedEffect(userId) {
+-        viewModel.loadUser(userId)
+-    }
++    LaunchedEffect(userId) { viewModel.loadUser(userId) }
+ 
+-    when {
+-        user != null -> Text(
+-            text = "Nom complet : ${user!!.fullName}\nPseudo : ${user!!.username}\nBio : ${user!!.bio}",
+-            modifier = modifier
+-        )
+-        error != null -> Text(text = error!!, modifier = modifier)
+-        else -> Text(text = "Chargement...", modifier = modifier)
++    Column(modifier = Modifier.padding(16.dp)) {
++        when {
++            user != null -> {
++                Text("Full Name: ${user!!.fullName}")
++                Text("Username: ${user!!.username}")
++                Text("Bio: ${user!!.bio}")
++            }
++            error != null -> Text(text = error!!, color = MaterialTheme.colorScheme.error)
++            else -> Text("Loading...")
++        }
+     }
+ }
+Index: app/src/main/java/com/example/arhoverse/presentation/user/UserDetailViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse.presentation.user\n\nimport android.util.Log\nimport androidx.lifecycle.ViewModel\nimport androidx.lifecycle.viewModelScope\nimport com.example.arhoverse.domain.model.User\nimport com.example.arhoverse.domain.usecase.GetUserUseCase\nimport kotlinx.coroutines.flow.MutableStateFlow\nimport kotlinx.coroutines.flow.StateFlow\nimport kotlinx.coroutines.launch\n\nclass UserDetailViewModel(private val getUserUseCase: GetUserUseCase) : ViewModel() {\n    private val _user = MutableStateFlow<User?>(null)\n    val user: StateFlow<User?> = _user\n\n    private val _error = MutableStateFlow<String?>(null)\n    val error: StateFlow<String?> = _error\n\n    fun loadUser(id: Int) {\n        Log.d(\"UserDetail\", \"Appel API pour l'utilisateur id=$id\")\n        viewModelScope.launch {\n            try {\n                val userResult = getUserUseCase(id)\n                Log.d(\"UserDetail\", \"Réponse API: $userResult\")\n                _user.value = userResult\n                _error.value = null\n            } catch (e: Exception) {\n                Log.e(\"UserDetail\", \"Erreur API: ${e.message}\")\n                _user.value = null\n                _error.value = \"Erreur de chargement : ${e.message}\"\n            }\n        }\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailViewModel.kt b/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailViewModel.kt
+--- a/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailViewModel.kt	(revision 98ff26bce1316a6a1ff7ebb76acf696a1763fc2e)
++++ b/app/src/main/java/com/example/arhoverse/presentation/user/UserDetailViewModel.kt	(date 1757507732079)
+@@ -1,6 +1,5 @@
+ package com.example.arhoverse.presentation.user
+ 
+-import android.util.Log
+ import androidx.lifecycle.ViewModel
+ import androidx.lifecycle.viewModelScope
+ import com.example.arhoverse.domain.model.User
+@@ -17,17 +16,14 @@
+     val error: StateFlow<String?> = _error
+ 
+     fun loadUser(id: Int) {
+-        Log.d("UserDetail", "Appel API pour l'utilisateur id=$id")
+         viewModelScope.launch {
+             try {
+                 val userResult = getUserUseCase(id)
+-                Log.d("UserDetail", "Réponse API: $userResult")
+                 _user.value = userResult
+                 _error.value = null
+             } catch (e: Exception) {
+-                Log.e("UserDetail", "Erreur API: ${e.message}")
+                 _user.value = null
+-                _error.value = "Erreur de chargement : ${e.message}"
++                _error.value = "Erreur: ${e.message}"
+             }
+         }
+     }
+Index: app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse.presentation.navigation\n\nimport androidx.compose.runtime.Composable\nimport androidx.navigation.NavHostController\nimport androidx.navigation.compose.NavHost\nimport androidx.navigation.compose.composable\nimport androidx.navigation.compose.rememberNavController\nimport com.example.arhoverse.presentation.user.UserDetailScreen\nimport com.example.arhoverse.presentation.user.UserDetailViewModel\n\nsealed class Screen(val route: String) {\n    object UserDetail : Screen(\"userDetail/{userId}\") {\n        fun createRoute(userId: Int) = \"userDetail/$userId\"\n    }\n}\n\n@Composable\nfun AppNavGraph(\n    viewModelFactory: (Int) -> UserDetailViewModel\n) {\n    val navController = rememberNavController()\n    NavHost(navController = navController, startDestination = Screen.UserDetail.createRoute(1)) {\n        composable(\"userDetail/{userId}\") { backStackEntry ->\n            val userId = 1 // Test toujours sur l'utilisateur 1\n            val viewModel = viewModelFactory(userId)\n            UserDetailScreen(userId = userId, viewModel = viewModel)\n        }\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt b/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt
+--- a/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt	(revision 98ff26bce1316a6a1ff7ebb76acf696a1763fc2e)
++++ b/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt	(date 1757500643017)
+@@ -1,29 +1,70 @@
+ package com.example.arhoverse.presentation.navigation
+ 
+ import androidx.compose.runtime.Composable
++import androidx.compose.ui.Modifier
++import androidx.lifecycle.viewmodel.compose.viewModel
+ import androidx.navigation.NavHostController
+ import androidx.navigation.compose.NavHost
+ import androidx.navigation.compose.composable
+ import androidx.navigation.compose.rememberNavController
+-import com.example.arhoverse.presentation.user.UserDetailScreen
+-import com.example.arhoverse.presentation.user.UserDetailViewModel
+-
+-sealed class Screen(val route: String) {
+-    object UserDetail : Screen("userDetail/{userId}") {
+-        fun createRoute(userId: Int) = "userDetail/$userId"
+-    }
+-}
++import com.example.arhoverse.presentation.user.*
+ 
+ @Composable
+-fun AppNavGraph(
+-    viewModelFactory: (Int) -> UserDetailViewModel
++fun NavGraph(
++    modifier: Modifier = Modifier,
++    navController: NavHostController = rememberNavController(),
++    startDestination: String = "login"
+ ) {
+-    val navController = rememberNavController()
+-    NavHost(navController = navController, startDestination = Screen.UserDetail.createRoute(1)) {
+-        composable("userDetail/{userId}") { backStackEntry ->
+-            val userId = 1 // Test toujours sur l'utilisateur 1
+-            val viewModel = viewModelFactory(userId)
+-            UserDetailScreen(userId = userId, viewModel = viewModel)
++    NavHost(
++        navController = navController,
++        startDestination = startDestination,
++        modifier = modifier
++    ) {
++        // Login
++        composable("login") {
++            val authViewModel: AuthViewModel = viewModel()
++            LoginScreen(
++                viewModel = authViewModel,
++                onLoginSuccess = {
++                    navController.navigate("home") {
++                        popUpTo("login") { inclusive = true }
++                    }
++                },
++                onNavigateToSignup = { navController.navigate("signup") }
++            )
++        }
++
++        // Signup
++        composable("signup") {
++            val authViewModel: AuthViewModel = viewModel()
++            SignupScreen(
++                viewModel = authViewModel,
++                onSignupSuccess = {
++                    navController.navigate("home") {
++                        popUpTo("signup") { inclusive = true }
++                    }
++                },
++                onNavigateToLogin = { navController.navigate("login") }
++            )
++        }
++
++        // Home
++        composable("home") {
++            HomeScreen(
++                onUserClick = { userId ->
++                    navController.navigate("userDetail/$userId")
++                }
++            )
++        }
++
++        // User Detail
++        composable(
++            route = "userDetail/{userId}",
++            arguments = listOf()
++        ) { backStackEntry ->
++            val userId = backStackEntry.arguments?.getString("userId")?.toInt() ?: 0
++            val userDetailViewModel: UserDetailViewModel = viewModel()
++            UserDetailScreen(userId = userId, viewModel = userDetailViewModel)
+         }
+     }
+ }
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"ExternalStorageConfigurationManager\" enabled=\"true\" />\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_21\" default=\"true\" project-jdk-name=\"jbr-21\" project-jdk-type=\"JavaSDK\">\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision 98ff26bce1316a6a1ff7ebb76acf696a1763fc2e)
++++ b/.idea/misc.xml	(date 1757497869025)
+@@ -1,4 +1,3 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ExternalStorageConfigurationManager" enabled="true" />
+   <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="jbr-21" project-jdk-type="JavaSDK">
