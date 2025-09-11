@@ -38,6 +38,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.foundation.clickable
+import com.example.arhoverse.domain.model.User
+import com.example.arhoverse.domain.model.Post
+import kotlinx.coroutines.flow.collect
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,10 +51,10 @@ fun UserDetailScreen(
     onBack: (() -> Unit)? = null,
     onPostClick: ((Int) -> Unit)? = null
 ) {
-    val user by viewModel.user.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val posts by viewModel.posts.collectAsState()
-    val postsError by viewModel.postsError.collectAsState()
+    val user: User? by viewModel.user.collectAsState()
+    val error: String? by viewModel.error.collectAsState()
+    val posts: List<Post> by viewModel.posts.collectAsState()
+    val postsError: String? by viewModel.postsError.collectAsState()
 
     LaunchedEffect(userId) {
         viewModel.loadUser(userId)
@@ -81,10 +84,10 @@ fun UserDetailScreen(
                         modifier = Modifier.height(120.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = user!!.fullName ?: "", fontWeight = FontWeight.Bold, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified, textAlign = TextAlign.Center)
-                    Text(text = "@${user!!.username}", color = Color.Gray, textAlign = TextAlign.Center)
+                    Text(text = user?.fullName ?: "", fontWeight = FontWeight.Bold, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified, textAlign = TextAlign.Center)
+                    Text(text = "@${user?.username}", color = Color.Gray, textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = user!!.bio ?: "", textAlign = TextAlign.Center)
+                    Text(text = user?.bio ?: "", textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(24.dp))
                     Divider()
                     Spacer(modifier = Modifier.height(16.dp))
@@ -117,6 +120,13 @@ fun UserDetailScreen(
                                 }
                             }
                         }
+                    }
+                    val currentUserFollowId by viewModel.currentUserFollowId.collectAsState()
+                    androidx.compose.material3.Button(
+                        onClick = { viewModel.toggleFollow(userId) },
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    ) {
+                        Text(text = if (currentUserFollowId == null) "Suivre" else "Ne plus suivre")
                     }
                 }
                 error != null -> Text(text = error!!, modifier = Modifier.padding(16.dp))

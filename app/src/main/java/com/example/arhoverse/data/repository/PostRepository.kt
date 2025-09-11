@@ -10,4 +10,5 @@ class PostRepository(private val apiService: ApiService) {
     suspend fun getPost(postId: Int): Post = apiService.getPost(postId)
     suspend fun getPostComments(postId: Int): List<Comment> = apiService.getPostComments(postId)
     suspend fun getPostLikes(postId: Int): List<Like> = apiService.getPostLikes(postId)
+    suspend fun getUser(userId: Int) = apiService.getUser(userId)
 }
