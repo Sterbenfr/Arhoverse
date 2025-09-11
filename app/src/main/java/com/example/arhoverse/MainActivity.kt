@@ -38,6 +38,10 @@ class MainActivity : ComponentActivity() {
         val userRepository = UserRepository(apiService)
         val getUserUseCase = GetUserUseCase(userRepository)
         val postRepository = PostRepository(apiService)
+        val followRepository = com.example.arhoverse.data.repository.FollowRepository(apiService)
+        val getFollowersUseCase = com.example.arhoverse.domain.usecase.GetFollowersUseCase(followRepository)
+        val followUserUseCase = com.example.arhoverse.domain.usecase.FollowUserUseCase(followRepository)
+        val unfollowUserUseCase = com.example.arhoverse.domain.usecase.UnfollowUserUseCase(followRepository)
         val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
         val getUsersUseCase = GetUsersUseCase(userRepository)
         val bookmarkRepository = BookmarkRepository(apiService)
@@ -46,6 +50,11 @@ class MainActivity : ComponentActivity() {
         val getPostLikesUseCase = GetPostLikesUseCase(postRepository)
         val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)
         val feedRepository = FeedRepository(apiService)
+        val likePostUseCase = com.example.arhoverse.domain.usecase.LikePostUseCase(feedRepository)
+        val unlikePostUseCase = com.example.arhoverse.domain.usecase.UnlikePostUseCase(feedRepository)
+        val addBookmarkUseCase = com.example.arhoverse.domain.usecase.AddBookmarkUseCase(feedRepository)
+        val removeBookmarkUseCase = com.example.arhoverse.domain.usecase.RemoveBookmarkUseCase(feedRepository)
+        val getPostBookmarksUseCase = com.example.arhoverse.domain.usecase.GetPostBookmarksUseCase(feedRepository)
         setContent {
             ArhoverseTheme {
                 AppNavGraph(
@@ -53,7 +62,13 @@ class MainActivity : ComponentActivity() {
                         UserListViewModel(getUsersUseCase)
                     },
                     userDetailViewModelFactory = { userId ->
-                        UserDetailViewModel(getUserUseCase, getUserPostsUseCase)
+                        UserDetailViewModel(
+                            getUserUseCase,
+                            getUserPostsUseCase,
+                            getFollowersUseCase,
+                            followUserUseCase,
+                            unfollowUserUseCase
+                        )
                     },
                     postDetailViewModelFactory = { postId ->
                         PostDetailViewModel(
@@ -61,7 +76,13 @@ class MainActivity : ComponentActivity() {
                             getUserUseCase,
                             getPostCommentsUseCase,
                             getPostLikesUseCase,
-                            getUserBookmarksUseCase
+                            getUserBookmarksUseCase,
+                            likePostUseCase,
+                            unlikePostUseCase,
+                            addBookmarkUseCase,
+                            removeBookmarkUseCase,
+                            getPostBookmarksUseCase,
+                            com.example.arhoverse.domain.usecase.AddCommentUseCase(feedRepository)
                         )
                     },
                     feedViewModelFactory = {

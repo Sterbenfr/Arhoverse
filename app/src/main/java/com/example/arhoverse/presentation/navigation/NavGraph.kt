@@ -67,10 +67,13 @@ fun AppNavGraph(
         composable("postDetail/{postId}") { backStackEntry ->
             val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull() ?: return@composable
             val viewModel = remember(postId) { postDetailViewModelFactory(postId) }
+            val CURRENT_USER_ID = 1 // À adapter si tu as une gestion dynamique de l'utilisateur
             PostDetailScreen(
                 postId = postId,
                 viewModel = viewModel,
-                onBack = { navController.popBackStack() }
+                currentUserId = CURRENT_USER_ID,
+                onBack = { navController.popBackStack() },
+                onUserClick = { userId -> navController.navigate(Screen.UserDetail.createRoute(userId)) }
             )
         }
     }

@@ -5,6 +5,6 @@ data class Comment(
     val postId: Int,
     val userId: Int,
     val content: String?,
-    val createdAt: String?
+    val createdAt: String?,
+    val userName: String? = null
 )
-

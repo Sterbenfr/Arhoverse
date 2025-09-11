@@ -16,7 +16,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun PostItem(post: PostWithUser, onPostClick: (String) -> Unit) {
+fun PostItem(
+    post: PostWithUser,
+    onPostClick: (String) -> Unit,
+    onLikeClick: (PostWithUser) -> Unit,
+    onBookmarkClick: (PostWithUser) -> Unit,
+    onCommentClick: (PostWithUser) -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,8 +53,20 @@ fun PostItem(post: PostWithUser, onPostClick: (String) -> Unit) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = post.post.caption ?: "")
             Spacer(modifier = Modifier.height(2.dp))
-            Text(text = "${post.likesCount} likes")
-            Text(text = "${post.commentsCount} comments")
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(
+                    text = "\u2764\ufe0f ${post.likesCount}",
+                    modifier = Modifier.clickable { onLikeClick(post) }
+                )
+                Text(
+                    text = "\ud83d\udd16 ${post.bookmarksCount}", // bookmark icon + nombre
+                    modifier = Modifier.clickable { onBookmarkClick(post) }
+                )
+                Text(
+                    text = "\ud83d\udcac ${post.commentsCount}",
+                    modifier = Modifier.clickable { onCommentClick(post) }
+                )
+            }
             Text(text = formatDate(post.post.createdAt ?: ""))
         }
     }
