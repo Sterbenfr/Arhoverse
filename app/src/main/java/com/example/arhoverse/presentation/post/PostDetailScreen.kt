@@ -1,5 +1,6 @@
 package com.example.arhoverse.presentation.post
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,7 +31,8 @@ fun PostDetailScreen(
     viewModel: PostDetailViewModel,
     modifier: Modifier = Modifier,
     currentUserId: Int? = null,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onUserClick: ((Int) -> Unit)? = null
 ) {
     val post by viewModel.post.collectAsState()
     val author by viewModel.author.collectAsState()
@@ -38,13 +40,10 @@ fun PostDetailScreen(
     val likes by viewModel.likes.collectAsState()
     val bookmarks by viewModel.bookmarks.collectAsState()
     val error by viewModel.error.collectAsState()
+    val postBookmarksCount by viewModel.postBookmarksCount.collectAsState()
 
     LaunchedEffect(postId) {
         viewModel.loadPost(postId, currentUserId)
-    }
-
-    val commentAuthors = comments.map { comment ->
-        author?.let { if (comment.userId == it.id) it else null }
     }
 
     Scaffold(
@@ -101,24 +100,70 @@ fun PostDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
-                                Text(text = author!!.fullName ?: "", fontWeight = FontWeight.Medium)
-                                Text(text = "@${author!!.username}", color = Color.Gray)
+                                Text(
+                                    text = author!!.fullName ?: "",
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = if (onUserClick != null) {
+                                        Modifier.clickable { onUserClick(author!!.id) }
+                                    } else Modifier
+                                )
+                                Text(
+                                    text = "@${author!!.username}",
+                                    color = Color.Gray,
+                                    modifier = if (onUserClick != null) {
+                                        Modifier.clickable { onUserClick(author!!.id) }
+                                    } else Modifier
+                                )
                             }
                         }
                     }
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row {
-                        Text(text = "❤️ ${likes.size}", modifier = Modifier.padding(end = 16.dp))
-                        Text(text = "🔖 ${bookmarks.count { it.postId == post!!.id }}", modifier = Modifier.padding(end = 16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        val currentUserLike = likes.find { it.userId == currentUserId }
+                        IconButton(onClick = {
+                            if (currentUserId != null) viewModel.toggleLike(currentUserId)
+                        }) {
+                            Text(text = "❤️ ${likes.size}", color = if (currentUserLike != null) Color.Red else Color.Gray)
+                        }
+                        val currentUserBookmark = bookmarks.find { it.userId == currentUserId }
+                        IconButton(onClick = {
+                            if (currentUserId != null) viewModel.toggleBookmark(currentUserId)
+                        }) {
+                            Text(text = "🔖 $postBookmarksCount", color = if (currentUserBookmark != null) Color(0xFF2196F3) else Color.Gray)
+                        }
                         Text(text = "💬 ${comments.size}")
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(text = "Commentaires :", fontWeight = FontWeight.Bold)
+                    if (currentUserId != null) {
+                        var commentText = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            TextField(
+                                value = commentText.value,
+                                onValueChange = { commentText.value = it },
+                                label = { Text("Ajouter un commentaire") },
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(onClick = {
+                                if (commentText.value.isNotBlank()) {
+                                    viewModel.addComment(post!!.id, currentUserId, commentText.value)
+                                    commentText.value = ""
+                                }
+                            }) {
+                                Text("Envoyer")
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                     if (comments.isEmpty()) {
                         Text(text = "Aucun commentaire.", color = Color.Gray)
                     } else {
                         LazyColumn {
-                            items(comments.zip(commentAuthors)) { (comment, author) ->
+                            items(comments) { comment ->
                                 Card(
                                     modifier = Modifier
                                         .padding(vertical = 4.dp)
@@ -127,18 +172,14 @@ fun PostDetailScreen(
                                 ) {
                                     Column(modifier = Modifier.padding(8.dp)) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            if (author != null) {
-                                                AsyncImage(
-                                                    model = author.avatarUrl,
-                                                    contentDescription = "Avatar du commentateur",
-                                                    modifier = Modifier.height(24.dp).width(24.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(text = author.fullName ?: "", fontWeight = FontWeight.Bold)
-                                                Text(text = "@${author.username}", color = Color.Gray, fontSize = androidx.compose.ui.unit.TextUnit.Unspecified)
-                                            } else {
-                                                Text(text = "Utilisateur inconnu", color = Color.Gray)
-                                            }
+                                            Text(
+                                                text = comment.userName ?: "Utilisateur inconnu",
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (comment.userName == null) Color.Gray else Color.Unspecified,
+                                                modifier = if (comment.userName != null && onUserClick != null) {
+                                                    Modifier.clickable { onUserClick(comment.userId) }
+                                                } else Modifier
+                                            )
                                         }
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(text = comment.content ?: "", fontWeight = FontWeight.Medium)

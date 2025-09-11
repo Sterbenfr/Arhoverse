@@ -18,6 +18,8 @@ import com.example.arhoverse.presentation.feed.feed.FeedScreen
 import com.example.arhoverse.presentation.feed.FeedViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.arhoverse.presentation.feed.StoryViewModel
+
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
@@ -36,17 +38,21 @@ fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
     postDetailViewModelFactory: (Int) -> PostDetailViewModel,
     feedViewModelFactory: () -> ViewModelProvider.Factory,
-    userDetailViewModelFactory: (Int) -> UserDetailViewModel
+    storyViewModelFactory: () -> ViewModelProvider.Factory
 ) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.Login.route) {
-        composable(Screen.Login.route) {
-            LoginScreen(
-                onLoginSuccess = {
-                    navController.navigate(Screen.UserList.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
-                    }
+    NavHost(navController = navController, startDestination = Screen.Feed.route) {
+
+        composable(Screen.Feed.route) {
+            val feedViewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())
+            val storyViewModel: StoryViewModel = viewModel(factory = storyViewModelFactory())
+
+            FeedScreen(
+                feedViewModel = feedViewModel,
+                storyViewModel = storyViewModel,
+                onPostClick = { postId ->
+                    navController.navigate(Screen.PostDetail.createRoute(postId.toInt()))
                 }
             )
         }
@@ -62,12 +68,27 @@ fun AppNavGraph(
         }
 
         composable(Screen.UserDetail.route) { backStackEntry ->
+
             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
             val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
             UserDetailScreen(
                 userId = userId,
                 viewModel = viewModel,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onPostClick = { postId -> navController.navigate(Screen.PostDetail.createRoute(postId)) }
+            )
+        }
+
+        composable("postDetail/{postId}") { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull() ?: return@composable
+            val viewModel = remember(postId) { postDetailViewModelFactory(postId) }
+            val CURRENT_USER_ID = 1 // À adapter si tu as une gestion dynamique de l'utilisateur
+            PostDetailScreen(
+                postId = postId,
+                viewModel = viewModel,
+                currentUserId = CURRENT_USER_ID,
+                onBack = { navController.popBackStack() },
+                onUserClick = { userId -> navController.navigate(Screen.UserDetail.createRoute(userId)) }
             )
         }
     }

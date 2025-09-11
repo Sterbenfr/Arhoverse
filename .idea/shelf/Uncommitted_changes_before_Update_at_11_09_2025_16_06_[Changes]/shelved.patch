@@ -1,0 +1,430 @@
+Index: app/src/main/java/com/example/arhoverse/data/remote/ApiService.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse.data.remote\r\n\r\nimport com.example.arhoverse.domain.model.Post\r\nimport com.example.arhoverse.domain.model.User\r\nimport com.example.arhoverse.domain.model.Comment\r\nimport com.example.arhoverse.domain.model.Like\r\nimport com.example.arhoverse.domain.model.Bookmark\r\nimport retrofit2.http.GET\r\nimport retrofit2.http.Path\r\nimport retrofit2.http.Query\r\n\r\ninterface ApiService {\r\n    @GET(\"users/{id}\")\r\n    suspend fun getUser(@Path(\"id\") id: Int): User\r\n\r\n    @GET(\"users/{id}/posts\")\r\n    suspend fun getUserPosts(@Path(\"id\") userId: Int): List<Post>\r\n\r\n    @GET(\"users\")\r\n    suspend fun getUsers(): List<User>\r\n\r\n    @GET(\"posts/{id}\")\r\n    suspend fun getPost(@Path(\"id\") postId: Int): Post\r\n\r\n    @GET(\"posts/{id}/comments\")\r\n    suspend fun getPostComments(@Path(\"id\") postId: Int): List<Comment>\r\n\r\n    @GET(\"posts/{id}/likes\")\r\n    suspend fun getPostLikes(@Path(\"id\") postId: Int): List<Like>\r\n\r\n    @GET(\"bookmarks\")\r\n    suspend fun getUserBookmarks(@Query(\"userId\") userId: Int): List<Bookmark>\r\n\r\n\r\n    @GET(\"feed\")\r\n    suspend fun getFeed(): List<Post>\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/data/remote/ApiService.kt b/app/src/main/java/com/example/arhoverse/data/remote/ApiService.kt
+--- a/app/src/main/java/com/example/arhoverse/data/remote/ApiService.kt	(revision fa2e9f0a5f391e3b73f7810f0a6b79f46bb3d985)
++++ b/app/src/main/java/com/example/arhoverse/data/remote/ApiService.kt	(date 1757596728942)
+@@ -5,6 +5,7 @@
+ import com.example.arhoverse.domain.model.Comment
+ import com.example.arhoverse.domain.model.Like
+ import com.example.arhoverse.domain.model.Bookmark
++import com.example.arhoverse.domain.model.Story
+ import retrofit2.http.GET
+ import retrofit2.http.Path
+ import retrofit2.http.Query
+@@ -31,7 +32,14 @@
+     @GET("bookmarks")
+     suspend fun getUserBookmarks(@Query("userId") userId: Int): List<Bookmark>
+ 
+-
+     @GET("feed")
+     suspend fun getFeed(): List<Post>
++
++    @GET("stories")
++    suspend fun getStories(): List<Story>
++
++    @GET("users/{id}/stories")
++    suspend fun getUserStories(@Path("id") userId: Int): List<Story>
++
++
+ }
+Index: app/src/main/java/com/example/arhoverse/presentation/feed/feed/FeedScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse.presentation.feed.feed\r\n\r\nimport androidx.compose.foundation.layout.*\r\nimport androidx.compose.foundation.lazy.LazyColumn\r\nimport androidx.compose.foundation.lazy.items\r\nimport androidx.compose.material3.CircularProgressIndicator\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.runtime.LaunchedEffect\r\nimport androidx.compose.runtime.collectAsState\r\nimport androidx.compose.runtime.getValue\r\nimport androidx.compose.ui.Alignment\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.unit.dp\r\nimport com.example.arhoverse.presentation.feed.FeedViewModel\r\n\r\n@Composable\r\nfun FeedScreen(viewModel: FeedViewModel, onPostClick: (String) -> Unit) {\r\n    val posts by viewModel.feedPosts.collectAsState()\r\n    val errorMessage by viewModel.errorMessage.collectAsState()\r\n    val isLoading by viewModel.isLoading.collectAsState()\r\n    LaunchedEffect(Unit) {\r\n        if (posts.isEmpty() && errorMessage.isEmpty()){\r\n            viewModel.loadFeed()\r\n        }\r\n    }\r\n    Column(modifier = Modifier.fillMaxSize()) {\r\n        if (isLoading && posts.isEmpty()) {\r\n            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {\r\n                CircularProgressIndicator()\r\n            }\r\n        } else {\r\n            if (errorMessage.isNotEmpty()) {\r\n                Text(\r\n                    text = errorMessage,\r\n                    modifier = Modifier.padding(16.dp)\r\n                )\r\n            }\r\n            LazyColumn(\r\n                modifier = Modifier.weight(1f),\r\n                contentPadding = PaddingValues(vertical = 8.dp)\r\n            ) {\r\n                items(posts) { post ->\r\n                    PostItem(post, onPostClick)\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/feed/feed/FeedScreen.kt b/app/src/main/java/com/example/arhoverse/presentation/feed/feed/FeedScreen.kt
+--- a/app/src/main/java/com/example/arhoverse/presentation/feed/feed/FeedScreen.kt	(revision fa2e9f0a5f391e3b73f7810f0a6b79f46bb3d985)
++++ b/app/src/main/java/com/example/arhoverse/presentation/feed/feed/FeedScreen.kt	(date 1757597321488)
+@@ -13,20 +13,35 @@
+ import androidx.compose.ui.Modifier
+ import androidx.compose.ui.unit.dp
+ import com.example.arhoverse.presentation.feed.FeedViewModel
++import com.example.arhoverse.presentation.feed.StoryViewModel
+ 
+ @Composable
+-fun FeedScreen(viewModel: FeedViewModel, onPostClick: (String) -> Unit) {
+-    val posts by viewModel.feedPosts.collectAsState()
+-    val errorMessage by viewModel.errorMessage.collectAsState()
+-    val isLoading by viewModel.isLoading.collectAsState()
++fun FeedScreen(
++    feedViewModel: FeedViewModel,
++    storyViewModel: StoryViewModel,
++    onPostClick: (String) -> Unit
++) {
++    val posts by feedViewModel.feedPosts.collectAsState()
++    val errorMessage by feedViewModel.errorMessage.collectAsState()
++    val isLoading by feedViewModel.isLoading.collectAsState()
++
++    val stories by storyViewModel.stories.collectAsState()
++
+     LaunchedEffect(Unit) {
+-        if (posts.isEmpty() && errorMessage.isEmpty()){
+-            viewModel.loadFeed()
++        if (posts.isEmpty() && errorMessage.isEmpty()) {
++            feedViewModel.loadFeed()
+         }
++        if (stories.isEmpty()) {
++            storyViewModel.loadStories()
++        }
+     }
++
+     Column(modifier = Modifier.fillMaxSize()) {
+         if (isLoading && posts.isEmpty()) {
+-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
++            Box(
++                modifier = Modifier.fillMaxSize(),
++                contentAlignment = Alignment.Center
++            ) {
+                 CircularProgressIndicator()
+             }
+         } else {
+@@ -40,6 +55,12 @@
+                 modifier = Modifier.weight(1f),
+                 contentPadding = PaddingValues(vertical = 8.dp)
+             ) {
++                // 🚀 Section Stories en premier
++                item {
++                    StoriesRow(stories)
++                }
++
++                // 🚀 Ensuite les posts
+                 items(posts) { post ->
+                     PostItem(post, onPostClick)
+                 }
+Index: app/src/main/java/com/example/arhoverse/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse\r\n\r\nimport android.os.Bundle\r\nimport androidx.activity.ComponentActivity\r\nimport androidx.activity.compose.setContent\r\nimport androidx.activity.enableEdgeToEdge\r\nimport com.example.arhoverse.data.remote.ApiService\r\nimport com.example.arhoverse.data.repository.BookmarkRepository\r\nimport com.example.arhoverse.data.repository.FeedRepository\r\nimport com.example.arhoverse.data.repository.PostRepository\r\nimport com.example.arhoverse.data.repository.UserRepository\r\nimport com.example.arhoverse.domain.usecase.GetPostCommentsUseCase\r\nimport com.example.arhoverse.domain.usecase.GetPostLikesUseCase\r\nimport com.example.arhoverse.domain.usecase.GetPostUseCase\r\nimport com.example.arhoverse.domain.usecase.GetUserBookmarksUseCase\r\nimport com.example.arhoverse.domain.usecase.GetUserPostsUseCase\r\nimport com.example.arhoverse.domain.usecase.GetUserUseCase\r\nimport com.example.arhoverse.domain.usecase.GetUsersUseCase\r\nimport com.example.arhoverse.presentation.navigation.AppNavGraph\r\nimport com.example.arhoverse.presentation.post.PostDetailViewModel\r\nimport com.example.arhoverse.presentation.user.UserDetailViewModel\r\nimport com.example.arhoverse.presentation.user.UserListViewModel\r\nimport com.example.arhoverse.presentation.feed.theme.ArhoverseTheme\r\nimport com.example.arhoverse.presentation.feed.FeedViewModel\r\nimport com.example.arhoverse.presentation.feed.FeedViewModelFactory\r\nimport retrofit2.Retrofit\r\nimport retrofit2.converter.gson.GsonConverterFactory\r\n\r\nclass MainActivity : ComponentActivity() {\r\n    override fun onCreate(savedInstanceState: Bundle?) {\r\n        super.onCreate(savedInstanceState)\r\n        enableEdgeToEdge()\r\n        val retrofit = Retrofit.Builder()\r\n            .baseUrl(\"https://mini-social-api-ilyl.onrender.com\")\r\n            .addConverterFactory(GsonConverterFactory.create())\r\n            .build()\r\n        val apiService = retrofit.create(ApiService::class.java)\r\n        val userRepository = UserRepository(apiService)\r\n        val getUserUseCase = GetUserUseCase(userRepository)\r\n        val postRepository = PostRepository(apiService)\r\n        val getUserPostsUseCase = GetUserPostsUseCase(postRepository)\r\n        val getUsersUseCase = GetUsersUseCase(userRepository)\r\n        val bookmarkRepository = BookmarkRepository(apiService)\r\n        val getPostUseCase = GetPostUseCase(postRepository)\r\n        val getPostCommentsUseCase = GetPostCommentsUseCase(postRepository)\r\n        val getPostLikesUseCase = GetPostLikesUseCase(postRepository)\r\n        val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)\r\n        val feedRepository = FeedRepository(apiService)\r\n        setContent {\r\n            ArhoverseTheme {\r\n                AppNavGraph(\r\n                    userListViewModelFactory = {\r\n                        UserListViewModel(getUsersUseCase)\r\n                    },\r\n                    userDetailViewModelFactory = { userId ->\r\n                        UserDetailViewModel(getUserUseCase, getUserPostsUseCase)\r\n                    },\r\n                    postDetailViewModelFactory = { postId ->\r\n                        PostDetailViewModel(\r\n                            getPostUseCase,\r\n                            getUserUseCase,\r\n                            getPostCommentsUseCase,\r\n                            getPostLikesUseCase,\r\n                            getUserBookmarksUseCase\r\n                        )\r\n                    },\r\n                    feedViewModelFactory = {\r\n                        FeedViewModelFactory(feedRepository)\r\n                    }\r\n                )\r\n            }\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/MainActivity.kt b/app/src/main/java/com/example/arhoverse/MainActivity.kt
+--- a/app/src/main/java/com/example/arhoverse/MainActivity.kt	(revision fa2e9f0a5f391e3b73f7810f0a6b79f46bb3d985)
++++ b/app/src/main/java/com/example/arhoverse/MainActivity.kt	(date 1757598387062)
+@@ -21,40 +21,53 @@
+ import com.example.arhoverse.presentation.user.UserDetailViewModel
+ import com.example.arhoverse.presentation.user.UserListViewModel
+ import com.example.arhoverse.presentation.feed.theme.ArhoverseTheme
+-import com.example.arhoverse.presentation.feed.FeedViewModel
+ import com.example.arhoverse.presentation.feed.FeedViewModelFactory
+ import retrofit2.Retrofit
+ import retrofit2.converter.gson.GsonConverterFactory
++import com.example.arhoverse.data.repository.*
++import com.example.arhoverse.domain.usecase.*
++import com.example.arhoverse.presentation.feed.StoryViewModelFactory
+ 
+ class MainActivity : ComponentActivity() {
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+         enableEdgeToEdge()
++
++        // Retrofit + ApiService
+         val retrofit = Retrofit.Builder()
+-            .baseUrl("https://mini-social-api-ilyl.onrender.com")
++            .baseUrl("https://mini-social-api-ilyl.onrender.com/")
+             .addConverterFactory(GsonConverterFactory.create())
+             .build()
+         val apiService = retrofit.create(ApiService::class.java)
++
++        // Users
+         val userRepository = UserRepository(apiService)
+         val getUserUseCase = GetUserUseCase(userRepository)
+-        val postRepository = PostRepository(apiService)
+-        val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
+         val getUsersUseCase = GetUsersUseCase(userRepository)
+-        val bookmarkRepository = BookmarkRepository(apiService)
++        val getUserPostsUseCase = GetUserPostsUseCase(PostRepository(apiService))
++
++        // Posts
++        val postRepository = PostRepository(apiService)
+         val getPostUseCase = GetPostUseCase(postRepository)
+         val getPostCommentsUseCase = GetPostCommentsUseCase(postRepository)
+         val getPostLikesUseCase = GetPostLikesUseCase(postRepository)
++
++        // Bookmarks
++        val bookmarkRepository = BookmarkRepository(apiService)
+         val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)
++
++        // Feed
+         val feedRepository = FeedRepository(apiService)
++
++        // Stories
++        val storyRepository = StoryRepository(apiService)
++        val getStoriesUseCase = GetStoriesUseCase(storyRepository)
++
+         setContent {
+             ArhoverseTheme {
+                 AppNavGraph(
+-                    userListViewModelFactory = {
+-                        UserListViewModel(getUsersUseCase)
+-                    },
+-                    userDetailViewModelFactory = { userId ->
+-                        UserDetailViewModel(getUserUseCase, getUserPostsUseCase)
+-                    },
++                    userListViewModelFactory = { UserListViewModel(getUsersUseCase) },
++                    userDetailViewModelFactory = { userId -> UserDetailViewModel(getUserUseCase, getUserPostsUseCase) },
+                     postDetailViewModelFactory = { postId ->
+                         PostDetailViewModel(
+                             getPostUseCase,
+@@ -64,11 +77,10 @@
+                             getUserBookmarksUseCase
+                         )
+                     },
+-                    feedViewModelFactory = {
+-                        FeedViewModelFactory(feedRepository)
+-                    }
++                    feedViewModelFactory = { FeedViewModelFactory(feedRepository) },
++                    storyViewModelFactory = { StoryViewModelFactory(getStoriesUseCase) }
+                 )
+             }
+         }
+     }
+-}
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.arhoverse.presentation.navigation\r\n\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.navigation.compose.NavHost\r\nimport androidx.navigation.compose.composable\r\nimport androidx.navigation.compose.rememberNavController\r\nimport com.example.arhoverse.presentation.user.UserDetailScreen\r\nimport com.example.arhoverse.presentation.user.UserDetailViewModel\r\nimport com.example.arhoverse.presentation.user.UserListScreen\r\nimport com.example.arhoverse.presentation.user.UserListViewModel\r\nimport com.example.arhoverse.presentation.post.PostDetailScreen\r\nimport com.example.arhoverse.presentation.post.PostDetailViewModel\r\nimport androidx.compose.runtime.remember\r\nimport com.example.arhoverse.presentation.feed.feed.FeedScreen\r\nimport com.example.arhoverse.presentation.feed.FeedViewModel\r\nimport androidx.lifecycle.viewmodel.compose.viewModel\r\nimport androidx.lifecycle.ViewModelProvider\r\n\r\nsealed class Screen(val route: String) {\r\n    object UserList : Screen(\"userList\")\r\n    object UserDetail : Screen(\"userDetail/{userId}\") {\r\n        fun createRoute(userId: Int) = \"userDetail/$userId\"\r\n    }\r\n    object PostDetail : Screen(\"postDetail/{postId}\") {\r\n        fun createRoute(postId: Int) = \"postDetail/$postId\"\r\n    }\r\n    object Feed : Screen(\"feed\")\r\n}\r\n\r\n@Composable\r\nfun AppNavGraph(\r\n    userListViewModelFactory: () -> UserListViewModel,\r\n    userDetailViewModelFactory: (Int) -> UserDetailViewModel,\r\n    postDetailViewModelFactory: (Int) -> PostDetailViewModel,\r\n    feedViewModelFactory: () -> ViewModelProvider.Factory\r\n) {\r\n    val navController = rememberNavController()\r\n    NavHost(navController = navController, startDestination = Screen.Feed.route) {\r\n        composable(Screen.Feed.route) {\r\n            val viewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())\r\n            FeedScreen(\r\n                viewModel = viewModel,\r\n                onPostClick = { postId ->\r\n                    navController.navigate(Screen.PostDetail.createRoute(postId.toInt()))\r\n                }\r\n            )\r\n        }\r\n        composable(Screen.UserList.route) {\r\n            val viewModel = remember { userListViewModelFactory() }\r\n            UserListScreen(\r\n                viewModel = viewModel,\r\n                onUserClick = { userId ->\r\n                    navController.navigate(Screen.UserDetail.createRoute(userId))\r\n                }\r\n            )\r\n        }\r\n        composable(\"userDetail/{userId}\") { backStackEntry ->\r\n            val userId = backStackEntry.arguments?.getString(\"userId\")?.toIntOrNull() ?: 1\r\n            val viewModel = remember(userId) { userDetailViewModelFactory(userId) }\r\n            UserDetailScreen(\r\n                userId = userId,\r\n                viewModel = viewModel,\r\n                onBack = { navController.popBackStack() },\r\n                onPostClick = { postId -> navController.navigate(Screen.PostDetail.createRoute(postId)) }\r\n            )\r\n        }\r\n        composable(\"postDetail/{postId}\") { backStackEntry ->\r\n            val postId = backStackEntry.arguments?.getString(\"postId\")?.toIntOrNull() ?: return@composable\r\n            val viewModel = remember(postId) { postDetailViewModelFactory(postId) }\r\n            PostDetailScreen(\r\n                postId = postId,\r\n                viewModel = viewModel,\r\n                onBack = { navController.popBackStack() }\r\n            )\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt b/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt
+--- a/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt	(revision fa2e9f0a5f391e3b73f7810f0a6b79f46bb3d985)
++++ b/app/src/main/java/com/example/arhoverse/presentation/navigation/NavGraph.kt	(date 1757598308174)
+@@ -15,6 +15,8 @@
+ import com.example.arhoverse.presentation.feed.FeedViewModel
+ import androidx.lifecycle.viewmodel.compose.viewModel
+ import androidx.lifecycle.ViewModelProvider
++import com.example.arhoverse.presentation.feed.StoryViewModel
++
+ 
+ sealed class Screen(val route: String) {
+     object UserList : Screen("userList")
+@@ -32,19 +34,26 @@
+     userListViewModelFactory: () -> UserListViewModel,
+     userDetailViewModelFactory: (Int) -> UserDetailViewModel,
+     postDetailViewModelFactory: (Int) -> PostDetailViewModel,
+-    feedViewModelFactory: () -> ViewModelProvider.Factory
++    feedViewModelFactory: () -> ViewModelProvider.Factory,
++    storyViewModelFactory: () -> ViewModelProvider.Factory
+ ) {
+     val navController = rememberNavController()
++
+     NavHost(navController = navController, startDestination = Screen.Feed.route) {
++
+         composable(Screen.Feed.route) {
+-            val viewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())
++            val feedViewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())
++            val storyViewModel: StoryViewModel = viewModel(factory = storyViewModelFactory())
++
+             FeedScreen(
+-                viewModel = viewModel,
++                feedViewModel = feedViewModel,
++                storyViewModel = storyViewModel,
+                 onPostClick = { postId ->
+                     navController.navigate(Screen.PostDetail.createRoute(postId.toInt()))
+                 }
+             )
+         }
++
+         composable(Screen.UserList.route) {
+             val viewModel = remember { userListViewModelFactory() }
+             UserListScreen(
+@@ -54,6 +63,7 @@
+                 }
+             )
+         }
++
+         composable("userDetail/{userId}") { backStackEntry ->
+             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
+             val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
+@@ -64,6 +74,7 @@
+                 onPostClick = { postId -> navController.navigate(Screen.PostDetail.createRoute(postId)) }
+             )
+         }
++
+         composable("postDetail/{postId}") { backStackEntry ->
+             val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull() ?: return@composable
+             val viewModel = remember(postId) { postDetailViewModelFactory(postId) }
+@@ -74,4 +85,4 @@
+             )
+         }
+     }
+-}
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/arhoverse/domain/model/Story.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/domain/model/Story.kt b/app/src/main/java/com/example/arhoverse/domain/model/Story.kt
+new file mode 100644
+--- /dev/null	(date 1757596924229)
++++ b/app/src/main/java/com/example/arhoverse/domain/model/Story.kt	(date 1757596924229)
+@@ -0,0 +1,9 @@
++package com.example.arhoverse.domain.model
++
++data class Story(
++    val id: Int,
++    val userId: Int,
++    val mediaUrl: String,
++    val createdAt: String,
++    val expiresAt: String
++)
+Index: app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModelFactory.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModelFactory.kt b/app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModelFactory.kt
+new file mode 100644
+--- /dev/null	(date 1757598337504)
++++ b/app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModelFactory.kt	(date 1757598337504)
+@@ -0,0 +1,18 @@
++package com.example.arhoverse.presentation.feed
++
++import androidx.lifecycle.ViewModel
++import androidx.lifecycle.ViewModelProvider
++import com.example.arhoverse.domain.usecase.GetStoriesUseCase
++
++class StoryViewModelFactory(
++    private val getStoriesUseCase: GetStoriesUseCase
++) : ViewModelProvider.Factory {
++
++    override fun <T : ViewModel> create(modelClass: Class<T>): T {
++        if (modelClass.isAssignableFrom(StoryViewModel::class.java)) {
++            @Suppress("UNCHECKED_CAST")
++            return StoryViewModel(getStoriesUseCase) as T
++        }
++        throw IllegalArgumentException("Unknown ViewModel class")
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/arhoverse/data/repository/StoryRepository.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/data/repository/StoryRepository.kt b/app/src/main/java/com/example/arhoverse/data/repository/StoryRepository.kt
+new file mode 100644
+--- /dev/null	(date 1757597066749)
++++ b/app/src/main/java/com/example/arhoverse/data/repository/StoryRepository.kt	(date 1757597066749)
+@@ -0,0 +1,9 @@
++package com.example.arhoverse.data.repository
++
++import com.example.arhoverse.data.remote.ApiService
++import com.example.arhoverse.domain.model.Story
++
++class StoryRepository(private val apiService: ApiService) {
++    suspend fun getStories(): List<Story> = apiService.getStories()
++    suspend fun getUserStories(userId: Int): List<Story> = apiService.getUserStories(userId)
++}
+Index: app/src/main/java/com/example/arhoverse/presentation/feed/feed/StoriesRow.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/feed/feed/StoriesRow.kt b/app/src/main/java/com/example/arhoverse/presentation/feed/feed/StoriesRow.kt
+new file mode 100644
+--- /dev/null	(date 1757597372335)
++++ b/app/src/main/java/com/example/arhoverse/presentation/feed/feed/StoriesRow.kt	(date 1757597372335)
+@@ -0,0 +1,36 @@
++package com.example.arhoverse.presentation.feed.feed
++
++import androidx.compose.foundation.Image
++import androidx.compose.foundation.border
++import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.lazy.LazyRow
++import androidx.compose.foundation.lazy.items
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.runtime.Composable
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.unit.dp
++import coil.compose.rememberAsyncImagePainter
++import com.example.arhoverse.domain.model.Story
++
++@Composable
++fun StoriesRow(stories: List<Story>) {
++    LazyRow(
++        modifier = Modifier
++            .fillMaxWidth()
++            .padding(8.dp),
++        horizontalArrangement = Arrangement.spacedBy(12.dp)
++    ) {
++        items(stories) { story ->
++            Image(
++                painter = rememberAsyncImagePainter(story.mediaUrl),
++                contentDescription = "Story",
++                modifier = Modifier
++                    .size(70.dp)
++                    .clip(CircleShape)
++                    .border(2.dp, Color.Magenta, CircleShape)
++            )
++        }
++    }
++}
+Index: app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModel.kt b/app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModel.kt
+new file mode 100644
+--- /dev/null	(date 1757598324436)
++++ b/app/src/main/java/com/example/arhoverse/presentation/feed/StoryViewModel.kt	(date 1757598324436)
+@@ -0,0 +1,22 @@
++package com.example.arhoverse.presentation.feed
++
++
++import androidx.lifecycle.ViewModel
++import androidx.lifecycle.viewModelScope
++import com.example.arhoverse.domain.model.Story
++import com.example.arhoverse.domain.usecase.GetStoriesUseCase
++import kotlinx.coroutines.flow.MutableStateFlow
++import kotlinx.coroutines.flow.StateFlow
++import kotlinx.coroutines.launch
++
++class StoryViewModel(private val getStoriesUseCase: GetStoriesUseCase) : ViewModel() {
++
++    private val _stories = MutableStateFlow<List<Story>>(emptyList())
++    val stories: StateFlow<List<Story>> = _stories
++
++    fun loadStories() {
++        viewModelScope.launch {
++            _stories.value = getStoriesUseCase()
++        }
++    }
++}
+\ No newline at end of file
+Index: app/src/main/java/com/example/arhoverse/domain/usecase/GetStoriesUseCase.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/arhoverse/domain/usecase/GetStoriesUseCase.kt b/app/src/main/java/com/example/arhoverse/domain/usecase/GetStoriesUseCase.kt
+new file mode 100644
+--- /dev/null	(date 1757598352029)
++++ b/app/src/main/java/com/example/arhoverse/domain/usecase/GetStoriesUseCase.kt	(date 1757598352029)
+@@ -0,0 +1,11 @@
++package com.example.arhoverse.domain.usecase
++
++
++import com.example.arhoverse.data.repository.StoryRepository
++import com.example.arhoverse.domain.model.Story
++
++class GetStoriesUseCase(private val repository: StoryRepository) {
++    suspend operator fun invoke(): List<Story> {
++        return repository.getStories()
++    }
++}

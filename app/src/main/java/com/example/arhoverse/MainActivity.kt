@@ -25,14 +25,19 @@ import com.example.arhoverse.presentation.feed.FeedViewModel
 import com.example.arhoverse.presentation.feed.FeedViewModelFactory
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.example.arhoverse.data.repository.*
+import com.example.arhoverse.domain.usecase.*
+import com.example.arhoverse.presentation.feed.StoryViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+
+        // Retrofit + ApiService
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://mini-social-api-ilyl.onrender.com")
+            .baseUrl("https://mini-social-api-ilyl.onrender.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val apiService = retrofit.create(ApiService::class.java)
@@ -41,6 +46,10 @@ class MainActivity : ComponentActivity() {
         val getUsersUseCase = GetUsersUseCase(userRepository)
         val getUserUseCase = GetUserUseCase(userRepository)
         val postRepository = PostRepository(apiService)
+        val followRepository = com.example.arhoverse.data.repository.FollowRepository(apiService)
+        val getFollowersUseCase = com.example.arhoverse.domain.usecase.GetFollowersUseCase(followRepository)
+        val followUserUseCase = com.example.arhoverse.domain.usecase.FollowUserUseCase(followRepository)
+        val unfollowUserUseCase = com.example.arhoverse.domain.usecase.UnfollowUserUseCase(followRepository)
         val getUserPostsUseCase = GetUserPostsUseCase(postRepository)
         val bookmarkRepository = BookmarkRepository(apiService)
         val getPostUseCase = GetPostUseCase(postRepository)
@@ -49,6 +58,17 @@ class MainActivity : ComponentActivity() {
         val getUserBookmarksUseCase = GetUserBookmarksUseCase(bookmarkRepository)
         val feedRepository = FeedRepository(apiService)
 
+        val likePostUseCase = com.example.arhoverse.domain.usecase.LikePostUseCase(feedRepository)
+        val unlikePostUseCase = com.example.arhoverse.domain.usecase.UnlikePostUseCase(feedRepository)
+        val addBookmarkUseCase = com.example.arhoverse.domain.usecase.AddBookmarkUseCase(feedRepository)
+        val removeBookmarkUseCase = com.example.arhoverse.domain.usecase.RemoveBookmarkUseCase(feedRepository)
+        val getPostBookmarksUseCase = com.example.arhoverse.domain.usecase.GetPostBookmarksUseCase(feedRepository)
+
+        // Stories
+        val storyRepository = StoryRepository(apiService)
+        val getStoriesUseCase = GetStoriesUseCase(storyRepository)
+
+
         setContent {
             ArhoverseTheme {
                 AppNavGraph(
@@ -56,7 +76,13 @@ class MainActivity : ComponentActivity() {
                         UserListViewModel(getUsersUseCase)
                     },
                     userDetailViewModelFactory = { userId ->
-                        UserDetailViewModel(getUserUseCase, getUserPostsUseCase)
+                        UserDetailViewModel(
+                            getUserUseCase,
+                            getUserPostsUseCase,
+                            getFollowersUseCase,
+                            followUserUseCase,
+                            unfollowUserUseCase
+                        )
                     },
                     postDetailViewModelFactory = { postId ->
                         PostDetailViewModel(
@@ -64,12 +90,17 @@ class MainActivity : ComponentActivity() {
                             getUserUseCase,
                             getPostCommentsUseCase,
                             getPostLikesUseCase,
-                            getUserBookmarksUseCase
+                            getUserBookmarksUseCase,
+                            likePostUseCase,
+                            unlikePostUseCase,
+                            addBookmarkUseCase,
+                            removeBookmarkUseCase,
+                            getPostBookmarksUseCase,
+                            com.example.arhoverse.domain.usecase.AddCommentUseCase(feedRepository)
                         )
                     },
-                    feedViewModelFactory = {
-                        FeedViewModelFactory(feedRepository)
-                    }
+                    feedViewModelFactory = { FeedViewModelFactory(feedRepository) },
+                    storyViewModelFactory = { StoryViewModelFactory(getStoriesUseCase) }
                 )
             }
         }
