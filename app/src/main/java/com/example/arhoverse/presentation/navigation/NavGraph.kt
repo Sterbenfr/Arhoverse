@@ -15,6 +15,8 @@ import com.example.arhoverse.presentation.feed.feed.FeedScreen
 import com.example.arhoverse.presentation.feed.FeedViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.arhoverse.presentation.feed.StoryViewModel
+
 
 sealed class Screen(val route: String) {
     object UserList : Screen("userList")
@@ -32,19 +34,26 @@ fun AppNavGraph(
     userListViewModelFactory: () -> UserListViewModel,
     userDetailViewModelFactory: (Int) -> UserDetailViewModel,
     postDetailViewModelFactory: (Int) -> PostDetailViewModel,
-    feedViewModelFactory: () -> ViewModelProvider.Factory
+    feedViewModelFactory: () -> ViewModelProvider.Factory,
+    storyViewModelFactory: () -> ViewModelProvider.Factory
 ) {
     val navController = rememberNavController()
+
     NavHost(navController = navController, startDestination = Screen.Feed.route) {
+
         composable(Screen.Feed.route) {
-            val viewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())
+            val feedViewModel: FeedViewModel = viewModel(factory = feedViewModelFactory())
+            val storyViewModel: StoryViewModel = viewModel(factory = storyViewModelFactory())
+
             FeedScreen(
-                viewModel = viewModel,
+                feedViewModel = feedViewModel,
+                storyViewModel = storyViewModel,
                 onPostClick = { postId ->
                     navController.navigate(Screen.PostDetail.createRoute(postId.toInt()))
                 }
             )
         }
+
         composable(Screen.UserList.route) {
             val viewModel = remember { userListViewModelFactory() }
             UserListScreen(
@@ -54,6 +63,7 @@ fun AppNavGraph(
                 }
             )
         }
+
         composable("userDetail/{userId}") { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
             val viewModel = remember(userId) { userDetailViewModelFactory(userId) }
@@ -64,6 +74,7 @@ fun AppNavGraph(
                 onPostClick = { postId -> navController.navigate(Screen.PostDetail.createRoute(postId)) }
             )
         }
+
         composable("postDetail/{postId}") { backStackEntry ->
             val postId = backStackEntry.arguments?.getString("postId")?.toIntOrNull() ?: return@composable
             val viewModel = remember(postId) { postDetailViewModelFactory(postId) }

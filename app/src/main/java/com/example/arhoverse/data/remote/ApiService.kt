@@ -5,6 +5,7 @@ import com.example.arhoverse.domain.model.User
 import com.example.arhoverse.domain.model.Comment
 import com.example.arhoverse.domain.model.Like
 import com.example.arhoverse.domain.model.Bookmark
+import com.example.arhoverse.domain.model.Story
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -39,8 +40,17 @@ interface ApiService {
     @GET("bookmarks")
     suspend fun getUserBookmarks(@Query("userId") userId: Int): List<Bookmark>
 
+
     @GET("feed")
     suspend fun getFeed(): List<Post>
+
+    @GET("stories")
+    suspend fun getStories(): List<Story>
+
+    @GET("users/{id}/stories")
+    suspend fun getUserStories(@Path("id") userId: Int): List<Story>
+
+
 
     @POST("likes")
     suspend fun likePost(@Body body: LikeRequest): Like

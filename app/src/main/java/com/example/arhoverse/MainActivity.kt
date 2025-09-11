@@ -25,13 +25,18 @@ import com.example.arhoverse.presentation.feed.FeedViewModel
 import com.example.arhoverse.presentation.feed.FeedViewModelFactory
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.example.arhoverse.data.repository.*
+import com.example.arhoverse.domain.usecase.*
+import com.example.arhoverse.presentation.feed.StoryViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Retrofit + ApiService
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://mini-social-api-ilyl.onrender.com")
+            .baseUrl("https://mini-social-api-ilyl.onrender.com/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
         val apiService = retrofit.create(ApiService::class.java)
@@ -55,6 +60,11 @@ class MainActivity : ComponentActivity() {
         val addBookmarkUseCase = com.example.arhoverse.domain.usecase.AddBookmarkUseCase(feedRepository)
         val removeBookmarkUseCase = com.example.arhoverse.domain.usecase.RemoveBookmarkUseCase(feedRepository)
         val getPostBookmarksUseCase = com.example.arhoverse.domain.usecase.GetPostBookmarksUseCase(feedRepository)
+
+        // Stories
+        val storyRepository = StoryRepository(apiService)
+        val getStoriesUseCase = GetStoriesUseCase(storyRepository)
+
         setContent {
             ArhoverseTheme {
                 AppNavGraph(
@@ -85,9 +95,8 @@ class MainActivity : ComponentActivity() {
                             com.example.arhoverse.domain.usecase.AddCommentUseCase(feedRepository)
                         )
                     },
-                    feedViewModelFactory = {
-                        FeedViewModelFactory(feedRepository)
-                    }
+                    feedViewModelFactory = { FeedViewModelFactory(feedRepository) },
+                    storyViewModelFactory = { StoryViewModelFactory(getStoriesUseCase) }
                 )
             }
         }
