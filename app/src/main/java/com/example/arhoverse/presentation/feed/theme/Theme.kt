@@ -1,4 +1,4 @@
-package com.example.arhoverse.ui.theme
+package com.example.arhoverse.presentation.feed.theme
 
 import android.app.Activity
 import android.os.Build
